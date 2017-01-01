@@ -33,7 +33,7 @@ module.exports =
         if img.isEmpty() then return
 
         filename = "markdown-img-paste-#{new Date().format()}.png"
-        fullname = join(dirname(cursor.getPath()), filename)
+        fullname = join(dirname(cursor.getPath()+'/assets'), filename)
         fs.writeFileSync fullname, img.toPng()
 
         #上传至sm.ms
