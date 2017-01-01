@@ -33,7 +33,9 @@ module.exports =
         if img.isEmpty() then return
 
         filename = "markdown-img-paste-#{new Date().format()}.png"
-        fullname = join(dirname(cursor.getPath()+'/assets'), filename)
+        fullname = join(dirname(cursor.getPath()), 'asset', filename)
+        if !fs.existsSync  dirname(fullname)
+        fs.mkdirSync  dirname(fullname)
         fs.writeFileSync fullname, img.toPng()
 
         #上传至sm.ms
@@ -65,7 +67,7 @@ module.exports =
 
         #保存在本地
         if !atom.config.get('markdown-img-paste.upload_to_qiniu')
-            mdtext = '![](' + filename + ')'
+            mdtext = '![](' + fullname + ')'
             paste_mdtext cursor, mdtext
 
         #使用七牛存储图片
