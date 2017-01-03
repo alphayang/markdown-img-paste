@@ -32,18 +32,35 @@ module.exports =
         img = clipboard.readImage()
         if img.isEmpty() then return
 
-        filename = "markdown-img-paste-#{new Date().format()}.png"
-        fullname = join(dirname(cursor.getPath()), 'asset', filename)
+        #filename = "markdown-img-paste-#{new Date().format()}.png"
+        filename = "#{new Date().format()}.png"
+        foldername = cursor.getFileName().slice(0, -3)
+        #fullname = join(dirname(cursor.getPath()), 'asset', filename)
+        #fullname = join(dirname(path.dirname(cursor.getPath())),'img', filename)
+        fullname = join(dirname(dirname(cursor.getPath())), 'img',foldername, filename)
+
+
+
+        if !fs.existsSync  dirname(fullname)
+            fs.mkdirSync  dirname(fullname)
+
         fs.writeFileSync fullname, img.toPng()
+
+
 
         #上传至sm.ms
         if atom.config.get 'markdown-img-paste.upload_to_mssm'
             request = require 'request'
+            formData = {
+              smfile: fs.createReadStream fullname,
+              ssl: 1
+            }
+
 
             options =
                 uri: 'https://sm.ms/api/upload'
-                formData:
-                    smfile: fs.createReadStream fullname
+                formData: formData
+
 
             request.post options, (err, response, body) ->
                 if err
@@ -54,10 +71,11 @@ module.exports =
                         atom.notifications.addError 'Upload failed:' + body.msg
                     else
                         atom.notifications.addSuccess 'OK, image upload to sm.ms!'
-                        mdtext = '![](' + body.data.url + ')'
+                        #mdtext = '![](' + body.data.url + ')'
+                        mdtext = '!['+foldername+'/'+filename+'](https://ooo.0o0.ooo' + body.data.path + ')'
                         paste_mdtext cursor, mdtext
 
-            delete_file(fullname)
+            #delete_file(fullname)
 
             #完成
             return
@@ -66,6 +84,8 @@ module.exports =
         #保存在本地
         if !atom.config.get('markdown-img-paste.upload_to_qiniu')
             mdtext = '![](' + fullname + ')'
+            #mdtext = '![](../img/' + filename + ')' # 原本是 '![](' + fullname + ')'，修改成 '![](../images/' + filename + ')'
+
             paste_mdtext cursor, mdtext
 
         #使用七牛存储图片
